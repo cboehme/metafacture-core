@@ -33,6 +33,9 @@ import org.culturegraph.mf.framework.annotations.Description;
 import org.culturegraph.mf.framework.FluxCommand;
 import org.culturegraph.mf.framework.annotations.In;
 import org.culturegraph.mf.framework.annotations.Out;
+import org.culturegraph.mf.morph.api.EntityPipe;
+import org.culturegraph.mf.morph.api.EntityReceiver;
+import org.culturegraph.mf.morph.api.EntitySource;
 import org.culturegraph.mf.morph.api.FlushListener;
 import org.culturegraph.mf.morph.api.InterceptorFactory;
 import org.culturegraph.mf.morph.api.MorphDefException;
@@ -60,7 +63,7 @@ import org.xml.sax.InputSource;
 @In(StreamReceiver.class)
 @Out(StreamReceiver.class)
 @FluxCommand("morph")
-public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePipe, MultiMap {
+public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePipe, EntityPipe, MultiMap {
 
 	public static final String ELSE_KEYWORD = "_else";
 	public static final char FEEDBACK_CHAR = '@';
@@ -77,6 +80,8 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
 
 	private final Registry<NamedValueReceiver> dataRegistry = MorphCollectionFactory.createRegistry();
 	private final List<NamedValueReceiver> elseSources = MorphCollectionFactory.createList();
+
+	private final Registry<EntityReceiver> entityRegisty = MorphCollectionFactory.createRegistry();
 
 	private final MultiMap multiMap = MorphCollectionFactory.createMultiMap();
 	private final List<Closeable> resources = MorphCollectionFactory.createList();
@@ -209,6 +214,10 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
 		}
 	}
 
+	protected void registerEntityReceiver(final String name, final EntityReceiver receiver) {
+		entityRegisty.register(name, receiver);
+	}
+
 	@Override
 	public void startRecord(final String identifier) {
 		flattener.startRecord(identifier);
@@ -255,24 +264,21 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
 		entityCountStack.push(Integer.valueOf(entityCount));
 
 		flattener.startEntity(name);
-
-
-
+		dispatchEntityStart(flattener.getCurrentPath());
 	}
 
 	@Override
 	public void endEntity() {
 		dispatch(flattener.getCurrentPath(), "", null);
+		dispatchEntityEnd(flattener.getCurrentPath());
 		currentEntityCount = entityCountStack.pop().intValue();
 		flattener.endEntity();
-
 	}
 
 
 	@Override
 	public void literal(final String name, final String value) {
 		flattener.literal(name, value);
-
 	}
 
 	@Override
@@ -313,6 +319,28 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
 			try {
 				data.receive(key, value, null, recordCount, currentEntityCount);
 			} catch (final RuntimeException e) {
+				errorHandler.error(e);
+			}
+		}
+	}
+
+	private void dispatchEntityStart(final String path) {
+		final List<EntityReceiver> entityReceivers = entityRegisty.get(path);
+		for (final EntityReceiver entityReceiver : entityReceivers) {
+			try {
+				entityReceiver.receiveEntityStart(path, this, recordCount);
+			} catch ( final RuntimeException e) {
+				errorHandler.error(e);
+			}
+		}
+	}
+
+	private void dispatchEntityEnd(final String path) {
+		final List<EntityReceiver> entityReceivers = entityRegisty.get(path);
+		for (final EntityReceiver entityReceiver : entityReceivers) {
+			try {
+				entityReceiver.receiveEntityEnd(path, this, recordCount);
+			} catch ( final RuntimeException e) {
 				errorHandler.error(e);
 			}
 		}
@@ -397,6 +425,40 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
 	@Override
 	public void setNamedValueReceiver(final NamedValueReceiver receiver) {
 		throw new UnsupportedOperationException("The Metamorph object cannot act as a NamedValueSender");
+	}
+
+	@Override
+	public void addEntitySource(final EntitySource source) {
+		source.setEntityReceiver(this);
+	}
+
+	@Override
+	public void setEntityReceiver(final EntityReceiver receiver) {
+		throw new UnsupportedOperationException("The Metamorph object cannot act as an EntitySender");
+	}
+
+	@Override
+	public void receiveEntityStart(final String name, final EntitySource source,
+			final int recordCount) {
+
+		if (null == name) {
+			throw new IllegalArgumentException(
+					"encountered entity with name='null'. This indicates a bug an entity processor.");
+		}
+
+		outputStreamReceiver.startEntity(name);
+	}
+
+	@Override
+	public void receiveEntityEnd(final String name, final EntitySource source,
+			final int recordCount) {
+
+		if (null == name) {
+			throw new IllegalArgumentException(
+					"encountered entity with name='null'. This indicates a bug an entity processor.");
+		}
+
+		outputStreamReceiver.endEntity();
 	}
 
 	@Override

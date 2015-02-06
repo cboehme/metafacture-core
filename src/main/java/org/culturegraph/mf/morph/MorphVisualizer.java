@@ -212,6 +212,11 @@ public final class MorphVisualizer extends AbstractMetamorphDomWalker {
 	}
 
 	@Override
+	protected void handleEntityData(final Node node) {
+		// TODO: Implement output of entity-data elements
+	}
+
+	@Override
 	protected void enterCollect(final Node node) {
 		incrementChildCount();
 		pushChildCount();

@@ -57,7 +57,8 @@ public abstract class AbstractMetamorphDomWalker {
 		CLASS("class"),
 		DEFAULT("default"),
 		ENTITY_MARKER("entityMarker"),
-		FLUSH_WITH("flushWith");
+		FLUSH_WITH("flushWith"),
+		UNWRAP("unwrap");
 
 		private final String string;
 
@@ -71,6 +72,7 @@ public abstract class AbstractMetamorphDomWalker {
 	}
 
 	private static final String DATA = "data";
+	private static final String ENTITY_DATA = "entity-data";
 	private static final String MAP = "map";
 	private static final String CALL_MACRO = "call-macro";
 	private static final String IF = "if";
@@ -246,6 +248,8 @@ public abstract class AbstractMetamorphDomWalker {
 			enterData(node);
 			handlePostprocess(node);
 			exitData(node);
+		} else if (ENTITY_DATA.equals(nodeName)) {
+			handleEntityData(node);
 		} else if (CALL_MACRO.equals(nodeName)){
 			final String macroName = attribute(node, AttributeName.NAME);
 			final Node macroNode = macros.get(macroName);
@@ -323,6 +327,8 @@ public abstract class AbstractMetamorphDomWalker {
 	protected abstract void enterData(Node node);
 
 	protected abstract void exitData(Node node);
+
+	protected abstract void handleEntityData(Node node);
 
 	protected abstract void enterCollect(Node node);
 

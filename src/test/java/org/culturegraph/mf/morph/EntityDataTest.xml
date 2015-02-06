@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metamorph-test version="1.0"
+	xmlns="http://www.culturegraph.org/metamorph-test" xmlns:mm="http://www.culturegraph.org/metamorph">
+
+	<test-case name="should pass through an entity without changes">
+		<input type="text/x-formeta">
+			1 {
+				person {
+					firstname: Franz,
+					lastname: Kafka,
+					birthdate {
+						day: 2, month: 12, year: 1890
+					}
+				}
+			}
+		</input>
+
+		<transformation type="text/x-metamorph+xml">
+			<mm:metamorph version="1" entityMarker=".">
+				<mm:rules>
+					<mm:entity-data source="person" />
+				</mm:rules>
+			</mm:metamorph>
+		</transformation>
+
+		<result type="text/x-formeta">
+			1 {
+				person {
+					firstname: Franz,
+					lastname: Kafka,
+					birthdate {
+						day: 2, month: 12, year: 1890
+					}
+				}
+			}
+		</result>
+	</test-case>
+
+	<test-case name="should change the name of a passed-through entity">
+		<input type="text/x-formeta">
+			1 {
+				person {
+					firstname: Franz,
+					lastname: Kafka,
+					birthdate {
+						day: 2, month: 12, year: 1890
+					}
+				}
+			}
+		</input>
+
+		<transformation type="text/x-metamorph+xml">
+			<mm:metamorph version="1" entityMarker=".">
+				<mm:rules>
+					<mm:entity-data source="person" name="author" />
+				</mm:rules>
+			</mm:metamorph>
+		</transformation>
+
+		<result type="text/x-formeta">
+			1 {
+				author {
+					firstname: Franz,
+					lastname: Kafka,
+					birthdate {
+						day: 2, month: 12, year: 1890
+					}
+				}
+			}
+		</result>
+	</test-case>
+
+	<test-case name="should not mix forwarded data and transformed data">
+		<input type="text/x-formeta">
+			1 {
+				person {
+					firstname: Franz,
+					lastname: Kafka,
+					birthdate {
+						day: 2, month: 12, year: 1890
+					}
+				}
+			}
+		</input>
+
+		<transformation type="text/x-metamorph+xml">
+			<mm:metamorph version="1" entityMarker=".">
+				<mm:rules>
+					<mm:entity-data source="person" />
+					<mm:data source="person.firstname" name="firstName" />
+				</mm:rules>
+			</mm:metamorph>
+		</transformation>
+
+		<result type="text/x-formeta" strict-key-order="false">
+			1 {
+				person {
+					firstname: Franz,
+					lastname: Kafka,
+					birthdate {
+						day: 2, month: 12, year: 1890
+					}
+				},
+				firstName: Franz
+			}
+		</result>
+	</test-case>
+	
+	<test-case name="should unwrap entity if attriubte is set">
+		<input type="text/x-formeta">
+			1 {
+				person {
+					firstname: Franz,
+					lastname: Kafka,
+					birthdate {
+						day: 2, month: 12, year: 1890
+					}
+				}
+			}
+		</input>
+
+		<transformation type="text/x-metamorph+xml">
+			<mm:metamorph version="1" entityMarker=".">
+				<mm:rules>
+					<mm:entity-data source="person" unwrap="true" />
+				</mm:rules>
+			</mm:metamorph>
+		</transformation>
+
+		<result type="text/x-formeta">
+			1 {
+				firstname: Franz,
+				lastname: Kafka,
+				birthdate {
+					day: 2, month: 12, year: 1890
+				}
+			}
+		</result>
+	</test-case>
+	
+</metamorph-test>

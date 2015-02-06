@@ -1,5 +1,5 @@
 /*
- * Copyright 2013, 2014 Deutsche Nationalbibliothek
+ * Copyright 2016 Christoph Böhme
  *
  * Licensed under the Apache License, Version 2.0 the "License";
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.culturegraph.mf.morph;
-
-import org.culturegraph.mf.test.MetamorphTestSuite;
-import org.culturegraph.mf.test.MetamorphTestSuite.TestDefinitions;
-import org.junit.runner.RunWith;
-
+package org.culturegraph.mf.morph.api;
 
 /**
- * @author Markus Michael Geipel
+ * A sender of entity events.
+ *
+ * @author Christoph Böhme
  *
  */
-@RunWith(MetamorphTestSuite.class)
-@TestDefinitions({"MetamorphTest.xml", "MacroTest.xml", "CollectorTest.xml", "EntityDataTest.xml"})
-public final class MetamorphTest {/*bind to xml test*/}
+public interface EntitySource extends KnowsSourceLocation {
+
+	/**
+	 * Connects a source of entities to a receiver of entities.
+	 *
+	 * Users should not call this method to connect sources and
+	 * receivers but rather call
+	 * {@link EntityReceiver#addEntitySource}.
+	 */
+	void setEntityReceiver(EntityReceiver receiver);
+
+}

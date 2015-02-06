@@ -119,6 +119,7 @@
 				<element ref="tns:entity" />
 				<element ref="tns:call-macro" />
 				<element ref="xi:include" />
+				<element ref="tns:entity-data" />
 			</choice>
 			<attribute ref="xml:base" />
 		</complexType>
@@ -478,7 +479,16 @@
 		</complexType>
 	</element>
 
-
+	<element name="entity-data">
+		<annotation>
+			<documentation>Receives entities</documentation>
+		</annotation>
+		<complexType>
+			<attribute name="source" type="string" use="required" />
+			<attribute name="name" type="string" use="optional" />
+			<attribute name="unwrap" type="boolean" use="optional" default="false" />
+		</complexType>
+	</element>
 
 	<element name="entity-name">
 		<annotation>

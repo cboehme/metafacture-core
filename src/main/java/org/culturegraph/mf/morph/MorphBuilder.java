@@ -232,6 +232,22 @@ public final class MorphBuilder extends AbstractMetamorphDomWalker {
 	}
 
 	@Override
+	protected void handleEntityData(final Node node) {
+		final EntityData entityData = new EntityData();
+		entityData.setName(resolvedAttribute(node, AttributeName.NAME));
+		entityData.setUnwrap(Boolean.parseBoolean(resolvedAttribute(node, AttributeName.UNWRAP)));
+		entityData.setSourceLocation((Location) node.getUserData(Location.USER_DATA_ID));
+
+		metamorph.addEntitySource(entityData);
+		metamorph.addNamedValueSource(entityData);
+		final String source = resolvedAttribute(node, AttributeName.SOURCE);
+		metamorph.registerEntityReceiver(source, entityData);
+		metamorph.registerNamedValueReceiver(source, entityData);
+		metamorph.registerEntityReceiver(source + "*", entityData);
+		metamorph.registerNamedValueReceiver(source + "*", entityData);
+	}
+
+	@Override
 	protected void enterName(final Node nameNode) {
 		assert stack.peek().getPipe() instanceof Entity :
 				"statement `name` is only allowed in `entity` statements";
